@@ -1,6 +1,6 @@
 # Goalacritty theme changer
 
-## Introduciton
+## Introduction
 This is a simple application for alacritty terminal themes installation and selection written for MacOS.
 ![Selection Menu](selection_menu.png)
 

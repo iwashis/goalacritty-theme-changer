@@ -1,0 +1,7 @@
+[paths]
+themes_directory = "$HOME/.config/alacritty/themes"
+alacritty_config_path = "$HOME/.config/alacritty/alacritty.toml"
+
+[repos]
+theme_url = "https://github.com/alacritty/alacritty-theme"
+

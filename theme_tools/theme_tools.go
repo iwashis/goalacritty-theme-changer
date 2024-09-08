@@ -149,27 +149,30 @@ func InitAlacrittyConfig(config configloader.Config, theme ThemeData) error {
 	return os.WriteFile(alacrittyConfigPath, []byte(contentStr), 0644)
 }
 
+
 func UpdateAlacrittyConfigFile(config configloader.Config, td ThemeData) error {
-	// Expand the path to handle the '~'
 	alacrittyConfigPath := config.Paths.AlacrittyConfigPath
 	expandedThemesDirectory := config.Paths.ThemesDirectory
 	newThemePath := td.FullPath
+
 	// Construct the old and new theme paths to search and replace
-	themePattern := regexp.QuoteMeta(expandedThemesDirectory + "/themes/") + `(\w+)\.toml`
+	themePattern := regexp.QuoteMeta(expandedThemesDirectory + "/themes/") + `[^\"]+\.toml`
 
 	// Read the Alacritty config file
-	content, err := os.ReadFile(alacrittyConfigPath) // Use expanded path
+	content, err := os.ReadFile(alacrittyConfigPath)
 	if err != nil {
 		return err
 	}
 
-	// Replace the old theme path with the new one using a regex
+	// Check if the old theme path exists and replace it
 	re := regexp.MustCompile(themePattern)
-  if !re.MatchString(string(content)) {
-    InitAlacrittyConfig(config,td)
-    return nil
-  }
-	modifiedContent := re.ReplaceAllString(string(content), newThemePath)
-	// Write the modified content back to the config file
-	return os.WriteFile(alacrittyConfigPath, []byte(modifiedContent), 0644)
+	if re.MatchString(string(content)) {
+		// Replace the old theme path with the new one
+		modifiedContent := re.ReplaceAllString(string(content), newThemePath)
+		return os.WriteFile(alacrittyConfigPath, []byte(modifiedContent), 0644)
+	}
+
+	// If no match is found, append the new theme path
+	return InitAlacrittyConfig(config, td)
 }
+

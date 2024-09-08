@@ -1,6 +1,7 @@
 package install_themes
 
 import (
+  "fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -105,7 +106,7 @@ func TestUpdateAlacrittyConfigFile(t *testing.T) {
 			ThemesDirectory     string `toml:"themes_directory"`
 			AlacrittyConfigPath string `toml:"alacritty_config_path"`
 		}{
-			ThemesDirectory:     "/mock/themes",
+			ThemesDirectory:     "/mock",
 			AlacrittyConfigPath: alacrittyConfigPath.Name(),
 		},
 	}
@@ -125,6 +126,7 @@ func TestUpdateAlacrittyConfigFile(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Contains(t, string(content), existingTheme.FullPath, "Expected existing theme path to be in config")
 
+
 	// Now create a new theme data instance to replace the old theme
 	newTheme := ThemeData{
 		Name:     "monokai-pro",
@@ -141,6 +143,7 @@ func TestUpdateAlacrittyConfigFile(t *testing.T) {
 
 	// Check if the new theme has replaced the old one
 	assert.Contains(t, string(content), newTheme.FullPath, "Expected new theme path to be in config")
-	// assert.NotContains(t, string(content), existingTheme.FullPath, "Expected old theme path to be replaced")
+	assert.NotContains(t, string(content), existingTheme.FullPath, "Expected old theme path to be replaced")
+
 }
 

@@ -1,7 +1,6 @@
 package install_themes
 
 import (
-  "fmt"
 	"os"
 	"path/filepath"
 	"testing"

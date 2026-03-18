@@ -86,6 +86,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch keypress := msg.String(); keypress {
 		case "q", "ctrl+c":
 			m.quitting = true
+			// Restore original theme before quitting
+			it.UpdateAlacrittyConfigFile(m.config, m.currentTheme)
 			return m, tea.Quit
 
 		case "enter":
@@ -100,18 +102,22 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	m.list, cmd = m.list.Update(msg)
 
-	// Detect if the highlighted item has changed
-	currentIndex := m.list.Index()
-	if currentIndex != m.previousIndex {
-		i, ok := m.list.SelectedItem().(item)
-		if ok {
-			themeData := it.ThemeData{
-				Name:     i.title,
-				FullPath: i.desc,
+	// Only update theme when not actively filtering
+	if m.list.FilterState() == list.Unfiltered || m.list.FilterState() == list.FilterApplied {
+		currentIndex := m.list.Index()
+		if currentIndex != m.previousIndex {
+			i, ok := m.list.SelectedItem().(item)
+			if ok {
+				themeData := it.ThemeData{
+					Name:     i.title,
+					FullPath: i.desc,
+				}
+				if err := it.UpdateAlacrittyConfigFile(m.config, themeData); err != nil {
+					fmt.Fprintf(os.Stderr, "Error updating theme: %v\n", err)
+				}
 			}
-			it.UpdateAlacrittyConfigFile(m.config, themeData)
+			m.previousIndex = currentIndex
 		}
-		m.previousIndex = currentIndex
 	}
 
 	return m, cmd
@@ -122,8 +128,6 @@ func (m model) View() string {
 		return quitTextStyle.Render(fmt.Sprintf("Selected theme: %s", m.choice))
 	}
 	if m.quitting {
-		// We first have to reset the config file
-		it.UpdateAlacrittyConfigFile(m.config, m.currentTheme)
 		return quitTextStyle.Render("Not making a selection? That’s cool.")
 	}
 

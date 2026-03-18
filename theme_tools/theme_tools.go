@@ -88,7 +88,7 @@ func GetCurrentTheme(config configloader.Config) (*ThemeData, error) {
 
 	alacrittyConfigPath := config.Paths.AlacrittyConfigPath
 	expandedThemesDirectory := config.Paths.ThemesDirectory
-	themePathPattern := regexp.QuoteMeta(expandedThemesDirectory+"/themes/") + `(\w+)\.toml`
+	themePathPattern := regexp.QuoteMeta(expandedThemesDirectory+"/themes/") + `([\w-]+)\.toml`
 
 	// Read the Alacritty config file
 	content, err := os.ReadFile(alacrittyConfigPath) // Use expanded path
@@ -96,11 +96,16 @@ func GetCurrentTheme(config configloader.Config) (*ThemeData, error) {
 		return nil, err
 	}
 
-	// Replace the old theme path with the new one using a regex
+	// Extract the current theme path using a regex
 	re := regexp.MustCompile(themePathPattern)
-	currentThemePath := re.FindString(string(content))
+	matches := re.FindStringSubmatch(string(content))
+	if matches == nil {
+		return nil, fmt.Errorf("no theme found in alacritty config at %s", alacrittyConfigPath)
+	}
+	currentThemePath := matches[0] // full match is the path
+	themeName := matches[1]        // capture group is just the name
 	return &ThemeData{
-		Name:     currentThemePath,
+		Name:     themeName,
 		FullPath: currentThemePath,
 	}, nil
 }
@@ -111,7 +116,7 @@ func InitAlacrittyConfig(config configloader.Config, theme ThemeData) error {
 	// Read the existing Alacritty config file
   alacrittyConfigPath := config.Paths.AlacrittyConfigPath
   themePath := theme.FullPath
-	themePattern := regexp.QuoteMeta("/themes/") + `(\w+)\.toml`
+	themePattern := regexp.QuoteMeta("/themes/") + `([\w-]+)\.toml`
 
  // Check if the Alacritty config file exists
   if _, err := os.Stat(alacrittyConfigPath); os.IsNotExist(err) {
@@ -156,7 +161,7 @@ func UpdateAlacrittyConfigFile(config configloader.Config, td ThemeData) error {
 	newThemePath := td.FullPath
 
 	// Construct the old and new theme paths to search and replace
-	themePattern := regexp.QuoteMeta(expandedThemesDirectory + "/themes/") + `[^\"]+\.toml`
+	themePattern := regexp.QuoteMeta(expandedThemesDirectory+"/themes/") + `[\w-]+\.toml`
 
 	// Read the Alacritty config file
 	content, err := os.ReadFile(alacrittyConfigPath)
